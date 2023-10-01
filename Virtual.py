@@ -1,4 +1,4 @@
-import speech_recognition as sr #Alias de la libreria
+import speech_recognition as sr
 import pyttsx3, pywhatkit, wikipedia,datetime,keyboard
 from pygame import mixer
 
@@ -15,25 +15,32 @@ def talk(text):
     engine.runAndWait()
 
 def listen():
+    listener = sr.Recognizer()     
+    with sr.Microphone() as source:
+        print("Escuchando...")
+        listener.adjust_for_ambient_noise(source)
+        pc = listener.listen(source)
+
     try:
-        with sr.Microphone()as source:
-            print("Escuchando siuuu")
-            pc = listener.listen(source)
-            rec = listener.recognize_google(pc, language="es")
-            rec = rec.lower() #Tomar testo y convertir a minus
-            if name in rec:
-                rec = rec.replace(name,'')
-    except:
-        pass
+        rec = listener.recognize_google(pc, language="es")
+        rec = rec.lower()
+    except sr.UnknownValueError:
+        print("No te entendí, intenta de nuevo")
+        if name in rec:
+            rec = rec.replace(name, '')
     return rec
 
 def run_Virtual():
-    while True:
-        rec=listen()
+ while True:
+        try:
+            rec = listen()
+        except UnboundLocalError:
+            print("No te entendí, intenta de nuevo")
+            continue     
         if 'reproduce' in rec:
             music = rec.replace('reproduce', '')
-            print("Reproduciendo por las ordenes de cr7" + music)
-            talk("Reproduce" + music)
+            print("Reproduciendo " + music)
+            talk("Reproduciendo " + music)
             pywhatkit.playonyt(music)
         elif "busca" in rec:
             search = rec.replace('busca','')
