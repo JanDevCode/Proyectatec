@@ -370,7 +370,7 @@ def talk_files():
 def give_me_name():
     talk("Hola ¿como te llamas amiguito?")
     name=listen()
-    name = rec.strip()
+    name = name.strip()
     talk(f"Bienvenido {name}")
 
     try:
@@ -395,7 +395,6 @@ def thread_hello():
 
 thread_hello()
 
-say_hello()
 
 #Botones
 button_voice_mx = Button(main_window, text="Voz de México", fg='#21502D', bg="#FFFFFF", font=("Space mono", 12, "bold"), command=mexican_voice)
