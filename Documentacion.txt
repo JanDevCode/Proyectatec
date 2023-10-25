@@ -5,3 +5,5 @@ pip install pywhatkit
 pip install wikipedia
 pip install pygame
 pip install keyboard
+pip install opencv-python
+pip install numpy

@@ -1,8 +1,8 @@
 import speech_recognition as sr
-import pyttsx3, pywhatkit, wikipedia,datetime,keyboard
+import pyttsx3, pywhatkit, wikipedia,datetime,keyboard, colores
 from pygame import mixer
 
-
+ 
 name = "Angel"
 listener = sr.Recognizer()#Empieza a reconocer
 engine= pyttsx3.init() #iniciacion de la libreria
@@ -62,6 +62,9 @@ def run_Virtual():
                         mixer.music.stop()
                         break
                     #La alarma funciona con un sistema de 24 horas.
-         
+        elif'colores' in rec:
+            talk("Enseguida")
+            colores. capturando()    
+            
 if __name__ == '__main__':
             run_Virtual()
