@@ -220,7 +220,7 @@ def run_Virtual():
         if 'termina' in rec:
             talk("Adios")
             break
-            
+
     main_window.update()
 
 def write(f):
