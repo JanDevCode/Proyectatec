@@ -220,7 +220,7 @@ def run_Virtual():
         if 'termina' in rec:
             talk("Adios")
             break
-            
+
     main_window.update()
 
 def write(f):
@@ -395,7 +395,6 @@ def thread_hello():
 
 thread_hello()
 
-say_hello()
 
 #Botones
 button_voice_mx = Button(main_window, text="Voz de México", fg='#21502D', bg="#FFFFFF", font=("Space mono", 12, "bold"), command=mexican_voice)
