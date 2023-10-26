@@ -47,13 +47,13 @@ window_photo.pack(pady=5)
 def mexican_voice():
     change_voice(0)
 def spanish_voice():
-    change_voice(1)
-def english_voice():
     change_voice(2)
+def english_voice():
+    change_voice(1)
 def change_voice(id):
     engine.setProperty("voice",voices[id].id)#Tomamos la voz de la libreria
     engine.setProperty('rate', 145)#velocidad de la voz
-    talk("Hello i'm virtual")
+    talk("Asi se escucha la voz del asistente virtual dependiendo el idioma seleccionado creado por tony, guetze, angel y Jan")
 
 name = "Virtual"
 listener = sr.Recognizer()#Empieza a reconocer
@@ -82,7 +82,9 @@ charge_data(files, "archivos.txt")
 
 programs= dict()
 charge_data(programs, "apps.txt")
-print(programs)
+
+contacts = dict()
+charge_data(contacts, "contacts.txt")
 
 def talk(text):
     engine.say(text)
@@ -96,19 +98,21 @@ def write_text(text_wiki):
     text_info.insert(INSERT, text_wiki)
 
 def listen():
-    listener= sr.Recognizer  
+    listener = sr.Recognizer()  # Crea una instancia de la clase Recognizer
+    #rec=""
     with sr.Microphone() as source:
         listener.adjust_for_ambient_noise(source)
-        talk("Te escucho bicholover")
+        talk("Procedere a escucharte desde este momento.")
         pc = listener.listen(source)
     try:
-        rec=listener.recognize_google(pc, language="es")
-        rec=rec.lower()
-    except sr.UnknowValueError:
+        rec = listener.recognize_google(pc, language="es")
+        rec = rec.lower()
+    except sr.UnknownValueError:  # Corrige el nombre de la excepción
         print("No entendi, intenta de nuevo")
     except sr.RequestError as e:
-        print("El servicio de Google Speech Recognition service no fue capaz de reconocer el sonido; {0}" .format(e))
+        print("El servicio de Google Speech Recognition service no fue capaz de reconocer el sonido; {0}".format(e))
     return rec
+    
 #Funciones asociadas a las palabras claves
 
 def reproduce(rec):
@@ -162,7 +166,7 @@ def escribe(rec):
         file = open("nota.txt", 'w')
         write(file)
     if 'termina' in rec:
-        talk("Adios bichoLover")
+        talk("Adios")
     elif 'termina' in rec:
         talk('adios!')
 
@@ -186,20 +190,32 @@ def clock(rec):
             mixer.music.stop()
             break
 
+def enviar_mensaje(rec):
+    talk("A quien quieres enviar el mensaje?")
+    contact= listen()
+    contact= contact.strip()
 
+    if contact in contacts:
+        for cont in contacts:
+            if cont == contact:
+                contact = contacts[cont]
+                talk("¡Que mensaje quieres enviaarle?")
+                message = listen()
+                talk("Enviando mensaje...")
+                whapp.send_menssage(contact, message)
+    else:
+        talk("parece que aun no has agregado a ese contacto, usa el boton de agregar!")
 
-
-    #Diccionario con palabras clave
-    key_words={
+key_words = {
         'reproduce': reproduce,
-        'busca': usca,
+        'busca': busca,
         'alarma': thread_alarma,
         'colores': colores,
         'abre': abre,
         'archivo': archivo,
         'escribe': escribe,
-        'termina': termina
-      }
+        'mensaje': enviar_mensaje
+}
 
 
 
@@ -217,8 +233,8 @@ def run_Virtual():
             for word in key_words:
                 if word in rec:
                     key_words[word](rec)
-        if 'termina' in rec:
-            talk("Adios")
+        if 'Termina' in rec:
+            talk("Que tengas un gran dia. Hasta luego")
             break
 
     main_window.update()
@@ -310,6 +326,8 @@ def open_w_pages():
     save_button = Button(window_pages, text="Guardar", bg='#16222A', fg="white", width=8, height=1 , command=add_pages)
     save_button.pack(pady=4)   
 
+
+
 def add_files():
     name_file=namefile_entry.get().strip()
     path_file = pathf_entry.get().strip()
@@ -336,6 +354,40 @@ def add_pages():
     save_data(name_page, url_pages, "pages.txt")
     namepages_entry.delete(0, "end")
     pathp_entry.delete(0, "end") 
+
+def add_contacs():
+    name_contact = namecontact_entry.get().strip()
+    phone = phone_entry.get().strip()
+
+    contacts[name_contact] = phone
+    save_data(name_contact, phone, "contacts.txt")
+    namecontact_entry.delete(0, "end")
+    phone_entry.delete(0, "end")
+
+def open_w_contacts():
+    global namecontact_entry, phone_entry
+    window_contacts = Toplevel()
+    window_contacts.title("Agrega un contacto")
+    window_contacts.configure(bg="#434343")
+    window_contacts.geometry("600x400")
+    window_contacts.resizable(0,0)
+    main_window.eval(f"tk::PlaceWindow {str(window_contacts)} center")
+
+
+    name_label= Label(window_contacts, text="Nombre del contacto", fg="white", bg="#434343", font=('Arial', 15, 'bold'))
+    name_label.pack(pady=2)
+
+    namecontact_entry= Entry(window_contacts)
+    namecontact_entry.pack(pady=1)
+
+    phone_label = Label(window_contacts, text="Numero de celular (con codigo del pais)", fg="white", bg="#434343", font=('Arial', 10,'bold'))
+    phone_label.pack(pady=2)
+
+    phone_entry = Entry(window_contacts, width=35)
+    phone_entry.pack(pady=1)
+
+    save_button = Button(window_contacts, text="Guardar", bg='#FFFFFF', fg="black", width=8, height=1, command=add_contacs) 
+    save_button.pack(pady=4)
 
 def save_data(key, value, file_name):
     try:
@@ -367,6 +419,13 @@ def talk_files():
     else:
         talk("Aun no has agregado archivos")
 
+def talk_contacs():
+    if bool(contacts)==True:
+        talk("Has agregado los siguientes contactos")
+        for cont in contacts:
+            talk(cont)
+    else:
+        talk("Aun no has agregado contactos!")
 def give_me_name():
     talk("Hola ¿como te llamas amiguito?")
     name=listen()
@@ -374,7 +433,7 @@ def give_me_name():
     talk(f"Bienvenido {name}")
 
     try:
-        with open(name.txt, 'w') as f:
+        with open("name.txt", 'w') as f:
             f.write(name)
     except FileNotFoundError:
         file = open("name.txt", 'w')
@@ -419,6 +478,10 @@ button_tell_apps = Button(main_window, text="Apps agregadas", fg='black', bg="#F
 
 button_tell_files = Button(main_window, text="Archivos agregados", fg='black', bg="#FFFFFF", font=("Space mono", 12, "bold"),command=talk_files)
 
+button_add_contacs = Button(main_window, text="Agregar contactos", fg='black', bg="#FFFFFF", font=("Space mono", 12, "bold"),command=open_w_contacts)
+
+button_contactos_agregados = Button(main_window, text="Contactos agregados", fg='black', bg="#FFFFFF", font=("Space mono", 12, "bold"),command=talk_contacs)
+
 #posicionamiento de cada boton
 button_voice_mx.place(x=1200, y=73, width=200, height=50)
 button_voice_es.place(x=1200, y=156, width=200, height=50)
@@ -430,6 +493,8 @@ button_add_apps.place(x=1200, y=420, width=200, height=50)
 button_add_pages.place(x=1200, y=500, width=200, height=50)
 button_tell_pages.place(x=1180, y=600, width=250, height=50)
 button_tell_apps.place(x=1180, y=700, width=250, height=50)
-button_tell_files.place(x=1180, y=800, width=250, height=50)
+button_tell_files.place(x=1180, y=760, width=250, height=50)
+button_add_contacs.place(x=900, y=800, width=250, height=50)
+button_contactos_agregados.place(x=400, y=800, width=250, height=50)
 
 main_window.mainloop()
