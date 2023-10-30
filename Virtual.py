@@ -36,9 +36,9 @@ sites={
 programs={
     'telegram': r"ubicacion del ejecutable",
     'Spotify': r"ubicacion del ejecutable",
-    'Netflis: r"ubicacion del ejecutable",
+    'Netflis': r"ubicacion del ejecutable",
     'Minecraft': r"ubicacion del ejecutable",
-    'discord': r"Ubicacion del arcihvo"
+    'discord': r"Ubicacion del arcihvo",
     'Word': r"ubicacion del archivo"
     #La letra r es para indicarle que toda la barra es string.
     #Es importante la terminacion "etse"

@@ -6,6 +6,10 @@ from PIL import Image, ImageTk
 from pygame import mixer
 import threading as tr
 import whatsApp as whapp
+import browser
+import database
+from chatterbot import ChatBot
+from chatterbot.trainers import ListTrainer
 
 
 #inicio de la ventana
@@ -47,13 +51,13 @@ window_photo.pack(pady=5)
 def mexican_voice():
     change_voice(0)
 def spanish_voice():
-    change_voice(1)
-def english_voice():
     change_voice(2)
+def english_voice():
+    change_voice(1)
 def change_voice(id):
     engine.setProperty("voice",voices[id].id)#Tomamos la voz de la libreria
     engine.setProperty('rate', 145)#velocidad de la voz
-    talk("Hello i'm virtual")
+    talk("Asi se escucha la voz del asistente virtual dependiendo el idioma seleccionado creado por tony, guetze, angel y Jan")
 
 name = "Virtual"
 listener = sr.Recognizer()#Empieza a reconocer
@@ -82,7 +86,9 @@ charge_data(files, "archivos.txt")
 
 programs= dict()
 charge_data(programs, "apps.txt")
-print(programs)
+
+contacts = dict()
+charge_data(contacts, "contacts.txt")
 
 def talk(text):
     engine.say(text)
@@ -95,20 +101,22 @@ def read_and_talk():
 def write_text(text_wiki):
     text_info.insert(INSERT, text_wiki)
 
-def listen():
-    listener= sr.Recognizer  
+def listen(phrase=None):
+    listener = sr.Recognizer()  # Crea una instancia de la clase Recognizer
+    #rec=""
     with sr.Microphone() as source:
         listener.adjust_for_ambient_noise(source)
-        talk("Te escucho bicholover")
+        talk(phrase)
         pc = listener.listen(source)
     try:
-        rec=listener.recognize_google(pc, language="es")
-        rec=rec.lower()
-    except sr.UnknowValueError:
+        rec = listener.recognize_google(pc, language="es")
+        rec = rec.lower()
+    except sr.UnknownValueError:  # Corrige el nombre de la excepción
         print("No entendi, intenta de nuevo")
     except sr.RequestError as e:
-        print("El servicio de Google Speech Recognition service no fue capaz de reconocer el sonido; {0}" .format(e))
+        print("El servicio de Google Speech Recognition service no fue capaz de reconocer el sonido; {0}".format(e))
     return rec
+    
 #Funciones asociadas a las palabras claves
 
 def reproduce(rec):
@@ -127,9 +135,12 @@ def busca(rec):
 def thread_alarma(rec):
     t= tr.Thread(target=clock, args=(rec,))
     t.start()
+
 def colores(rec):
     talk("Enseguida")
-    colores.capturando()
+    t = tr.Thread(target=colores.capturando)
+    t.start()
+
 def abre(rec):
     task = rec.replace('abre', '').strip()
 
@@ -142,7 +153,7 @@ def abre(rec):
                          for task in programs:
                              if task in rec:
                                  talk (f'Abriendo {task}')
-                                 sub.Popen(programs[task])
+                                 os.startfile(programs[task])
                     else:
                         talk("Lo siento parece que aun no has agregado esa app o pagina, usa los botones de agregar")
 def archivo(rec):
@@ -162,7 +173,7 @@ def escribe(rec):
         file = open("nota.txt", 'w')
         write(file)
     if 'termina' in rec:
-        talk("Adios bichoLover")
+        talk("Adios")
     elif 'termina' in rec:
         talk('adios!')
 
@@ -186,11 +197,61 @@ def clock(rec):
             mixer.music.stop()
             break
 
+def enviar_mensaje(rec):
+    talk("A quien quieres enviar el mensaje?")
+    contact= listen("Procedere a escucharte desde este momento.")
+    contact= contact.strip()
+
+    if contact in contacts:
+        for cont in contacts:
+            if cont == contact:
+                contact = contacts[cont]
+                talk("¡Que mensaje quieres enviaarle?")
+                message = listen("Procedere a escucharte desde este momento.")
+                talk("Enviando mensaje...")
+                whapp.send_menssage(contact, message)
+    else:
+        talk("parece que aun no has agregado a ese contacto, usa el boton de agregar!")
+
+def cierra(rec):
+    for task in programs:
+        kill_task =programs[task].split('\\')
+        kill_task = kill_task[-1]
+        if task in rec:
+            sub.call(f'TASKKILL /IM {kill_task} /F', shell=True)
+            talk(f'Cerrando {task}')
+        if 'todo' in rec:
+            sub.call(f'TASKKILL /IM {kill_task} /F', shell=True)
+            talk(f'Cerrando {task}')
+    if 'ciérrate' in rec:
+        talk(f'Muchas gracias afición esto es para vosotros siiiuuuu')
+        sub.call('TASKKILL /IM python.exe /F', shell=True)
+        
+def buscame (rec):
+    something = rec.replace('búscame', '').strip()
+    talk("Buscando" + something)
+    browser.search(something)         
+
+def conversar(rec):
+    chat = ChatBot("Virtual", database_uri=None)
+    trainer = ListTrainer(chat)
+    trainer.train(database.get_Preguntas_Respuestas())
+    talk("vamos a conversar...")
+    while True:
+        try:
+            request = listen("")
+        except UnboundLocalError:
+            talk("No entendi, intenta de nuevo")
+            continue 
+        print ("Tú: ", request)
+        answer = chat.get_response(request)
+        print ("Virtual: ", answer)     
+        talk (answer)
+        if 'un gusto' in request:
+            break   
 
 
-
-    #Diccionario con palabras clave
-    key_words={
+key_words = {
         'reproduce': reproduce,
         'busca': busca,
         'alarma': thread_alarma,
@@ -198,15 +259,19 @@ def clock(rec):
         'abre': abre,
         'archivo': archivo,
         'escribe': escribe,
-        'termina': termina
-      }
+        'mensaje': enviar_mensaje,
+        'cierra' :cierra,
+        'ciérrate':cierra,
+        'búscame': buscame,
+        'conversar': conversar
+}
 
 
 
 def run_Virtual():
     while True:  
         try:     
-            rec = listen()
+            rec = listen("Procedere a escucharte desde este momento.")
         except UnboundLocalError:
             talk("No entendi, intenta de nuevo")
             continue         
@@ -217,15 +282,15 @@ def run_Virtual():
             for word in key_words:
                 if word in rec:
                     key_words[word](rec)
-        if 'termina' in rec:
-            talk("Adios")
+        if 'Termina' in rec:
+            talk("Que tengas un gran dia. Hasta luego")
             break
 
     main_window.update()
 
 def write(f):
     talk("¿Que quieres que escriba?")
-    rec_write = listen()
+    rec_write = listen("Procedere a escucharte desde este momento.")
     f.write(rec_write + os.linesp)
     f.close()
     talk("Listo, puedes revisarlo")
@@ -310,6 +375,8 @@ def open_w_pages():
     save_button = Button(window_pages, text="Guardar", bg='#16222A', fg="white", width=8, height=1 , command=add_pages)
     save_button.pack(pady=4)   
 
+
+
 def add_files():
     name_file=namefile_entry.get().strip()
     path_file = pathf_entry.get().strip()
@@ -336,6 +403,40 @@ def add_pages():
     save_data(name_page, url_pages, "pages.txt")
     namepages_entry.delete(0, "end")
     pathp_entry.delete(0, "end") 
+
+def add_contacs():
+    name_contact = namecontact_entry.get().strip()
+    phone = phone_entry.get().strip()
+
+    contacts[name_contact] = phone
+    save_data(name_contact, phone, "contacts.txt")
+    namecontact_entry.delete(0, "end")
+    phone_entry.delete(0, "end")
+
+def open_w_contacts():
+    global namecontact_entry, phone_entry
+    window_contacts = Toplevel()
+    window_contacts.title("Agrega un contacto")
+    window_contacts.configure(bg="#434343")
+    window_contacts.geometry("600x400")
+    window_contacts.resizable(0,0)
+    main_window.eval(f"tk::PlaceWindow {str(window_contacts)} center")
+
+
+    name_label= Label(window_contacts, text="Nombre del contacto", fg="white", bg="#434343", font=('Arial', 15, 'bold'))
+    name_label.pack(pady=2)
+
+    namecontact_entry= Entry(window_contacts)
+    namecontact_entry.pack(pady=1)
+
+    phone_label = Label(window_contacts, text="Numero de celular (con codigo del pais)", fg="white", bg="#434343", font=('Arial', 10,'bold'))
+    phone_label.pack(pady=2)
+
+    phone_entry = Entry(window_contacts, width=35)
+    phone_entry.pack(pady=1)
+
+    save_button = Button(window_contacts, text="Guardar", bg='#FFFFFF', fg="black", width=8, height=1, command=add_contacs) 
+    save_button.pack(pady=4)
 
 def save_data(key, value, file_name):
     try:
@@ -367,14 +468,21 @@ def talk_files():
     else:
         talk("Aun no has agregado archivos")
 
+def talk_contacs():
+    if bool(contacts)==True:
+        talk("Has agregado los siguientes contactos")
+        for cont in contacts:
+            talk(cont)
+    else:
+        talk("Aun no has agregado contactos!")
 def give_me_name():
     talk("Hola ¿como te llamas amiguito?")
-    name=listen()
+    name=listen("Procedere a escucharte desde este momento.")
     name = name.strip()
     talk(f"Bienvenido {name}")
 
     try:
-        with open(name.txt, 'w') as f:
+        with open("name.txt", 'w') as f:
             f.write(name)
     except FileNotFoundError:
         file = open("name.txt", 'w')
@@ -419,6 +527,10 @@ button_tell_apps = Button(main_window, text="Apps agregadas", fg='black', bg="#F
 
 button_tell_files = Button(main_window, text="Archivos agregados", fg='black', bg="#FFFFFF", font=("Space mono", 12, "bold"),command=talk_files)
 
+button_add_contacs = Button(main_window, text="Agregar contactos", fg='black', bg="#FFFFFF", font=("Space mono", 12, "bold"),command=open_w_contacts)
+
+button_contactos_agregados = Button(main_window, text="Contactos agregados", fg='black', bg="#FFFFFF", font=("Space mono", 12, "bold"),command=talk_contacs)
+
 #posicionamiento de cada boton
 button_voice_mx.place(x=1200, y=73, width=200, height=50)
 button_voice_es.place(x=1200, y=156, width=200, height=50)
@@ -430,6 +542,8 @@ button_add_apps.place(x=1200, y=420, width=200, height=50)
 button_add_pages.place(x=1200, y=500, width=200, height=50)
 button_tell_pages.place(x=1180, y=600, width=250, height=50)
 button_tell_apps.place(x=1180, y=700, width=250, height=50)
-button_tell_files.place(x=1180, y=800, width=250, height=50)
+button_tell_files.place(x=1180, y=760, width=250, height=50)
+button_add_contacs.place(x=900, y=800, width=250, height=50)
+button_contactos_agregados.place(x=400, y=800, width=250, height=50)
 
 main_window.mainloop()
