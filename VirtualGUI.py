@@ -44,7 +44,7 @@ text_info = Text(main_window, bg= "#f1faee", fg="black")
 text_info.place(x=20,  y=400, height= 270, width=350)
 
 #La ruta puede cambiar dependiendo de la pc en la que se ejecute el programa.
-Virtual_photo = ImageTk.PhotoImage(Image.open("C:\\Users\\hu220\\Documents\\Proyectatec\\photos\\python.jpg"))
+Virtual_photo = ImageTk.PhotoImage(Image.open("C:\\Users\\janco\\Documents\\Proyectatec\\photos\\python.jpg"))
 window_photo = Label(main_window, image= Virtual_photo)
 window_photo.pack(pady=5)
 
@@ -101,12 +101,12 @@ def read_and_talk():
 def write_text(text_wiki):
     text_info.insert(INSERT, text_wiki)
 
-def listen(phrase=None):
+def listen():
     listener = sr.Recognizer()  # Crea una instancia de la clase Recognizer
     #rec=""
     with sr.Microphone() as source:
         listener.adjust_for_ambient_noise(source)
-        talk(phrase)
+        talk("Procedere a escucharte desde este momento.")
         pc = listener.listen(source)
     try:
         rec = listener.recognize_google(pc, language="es")
@@ -135,12 +135,9 @@ def busca(rec):
 def thread_alarma(rec):
     t= tr.Thread(target=clock, args=(rec,))
     t.start()
-
 def colores(rec):
     talk("Enseguida")
-    t = tr.Thread(target=colores.capturando)
-    t.start()
-
+    colores.capturando()
 def abre(rec):
     task = rec.replace('abre', '').strip()
 
@@ -153,7 +150,7 @@ def abre(rec):
                          for task in programs:
                              if task in rec:
                                  talk (f'Abriendo {task}')
-                                 os.startfile(programs[task])
+                                 sub.Popen(programs[task])
                     else:
                         talk("Lo siento parece que aun no has agregado esa app o pagina, usa los botones de agregar")
 def archivo(rec):
@@ -199,57 +196,19 @@ def clock(rec):
 
 def enviar_mensaje(rec):
     talk("A quien quieres enviar el mensaje?")
-    contact= listen("Procedere a escucharte desde este momento.")
+    contact= listen()
     contact= contact.strip()
 
     if contact in contacts:
         for cont in contacts:
             if cont == contact:
                 contact = contacts[cont]
-                talk("¡Que mensaje quieres enviaarle?")
-                message = listen("Procedere a escucharte desde este momento.")
+                talk("¿Que mensaje quieres enviaarle?")
+                message = listen()
                 talk("Enviando mensaje...")
                 whapp.send_menssage(contact, message)
     else:
         talk("parece que aun no has agregado a ese contacto, usa el boton de agregar!")
-
-def cierra(rec):
-    for task in programs:
-        kill_task =programs[task].split('\\')
-        kill_task = kill_task[-1]
-        if task in rec:
-            sub.call(f'TASKKILL /IM {kill_task} /F', shell=True)
-            talk(f'Cerrando {task}')
-        if 'todo' in rec:
-            sub.call(f'TASKKILL /IM {kill_task} /F', shell=True)
-            talk(f'Cerrando {task}')
-    if 'ciérrate' in rec:
-        talk(f'Muchas gracias afición esto es para vosotros siiiuuuu')
-        sub.call('TASKKILL /IM python.exe /F', shell=True)
-        
-def buscame (rec):
-    something = rec.replace('búscame', '').strip()
-    talk("Buscando" + something)
-    browser.search(something)         
-
-def conversar(rec):
-    chat = ChatBot("Virtual", database_uri=None)
-    trainer = ListTrainer(chat)
-    trainer.train(database.get_Preguntas_Respuestas())
-    talk("vamos a conversar...")
-    while True:
-        try:
-            request = listen("")
-        except UnboundLocalError:
-            talk("No entendi, intenta de nuevo")
-            continue 
-        print ("Tú: ", request)
-        answer = chat.get_response(request)
-        print ("Virtual: ", answer)     
-        talk (answer)
-        if 'un gusto' in request:
-            break   
-
 
 key_words = {
         'reproduce': reproduce,
@@ -259,11 +218,7 @@ key_words = {
         'abre': abre,
         'archivo': archivo,
         'escribe': escribe,
-        'mensaje': enviar_mensaje,
-        'cierra' :cierra,
-        'ciérrate':cierra,
-        'búscame': buscame,
-        'conversar': conversar
+        'mensaje': enviar_mensaje
 }
 
 
@@ -271,7 +226,7 @@ key_words = {
 def run_Virtual():
     while True:  
         try:     
-            rec = listen("Procedere a escucharte desde este momento.")
+            rec = listen()
         except UnboundLocalError:
             talk("No entendi, intenta de nuevo")
             continue         
@@ -290,7 +245,7 @@ def run_Virtual():
 
 def write(f):
     talk("¿Que quieres que escriba?")
-    rec_write = listen("Procedere a escucharte desde este momento.")
+    rec_write = listen()
     f.write(rec_write + os.linesp)
     f.close()
     talk("Listo, puedes revisarlo")
@@ -477,7 +432,7 @@ def talk_contacs():
         talk("Aun no has agregado contactos!")
 def give_me_name():
     talk("Hola ¿como te llamas amiguito?")
-    name=listen("Procedere a escucharte desde este momento.")
+    name=listen()
     name = name.strip()
     talk(f"Bienvenido {name}")
 
