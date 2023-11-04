@@ -103,7 +103,6 @@ def write_text(text_wiki):
 
 def listen():
     listener = sr.Recognizer()  # Crea una instancia de la clase Recognizer
-    #rec=""
     with sr.Microphone() as source:
         listener.adjust_for_ambient_noise(source)
         talk("Procedere a escucharte desde este momento.")
@@ -206,7 +205,7 @@ def enviar_mensaje(rec):
                 talk("¿Que mensaje quieres enviaarle?")
                 message = listen()
                 talk("Enviando mensaje...")
-                whapp.send_menssage(contact, message)
+                whapp.send_message(contact, message)
     else:
         talk("parece que aun no has agregado a ese contacto, usa el boton de agregar!")
 
@@ -237,7 +236,7 @@ def run_Virtual():
             for word in key_words:
                 if word in rec:
                     key_words[word](rec)
-        if 'Termina' in rec:
+        if 'termina' in rec:
             talk("Que tengas un gran dia. Hasta luego")
             break
 
@@ -246,7 +245,7 @@ def run_Virtual():
 def write(f):
     talk("¿Que quieres que escriba?")
     rec_write = listen()
-    f.write(rec_write + os.linesp)
+    f.write(rec_write + os.linesep)
     f.close()
     talk("Listo, puedes revisarlo")
     sub.Popen("nota.txt", shell=True)
