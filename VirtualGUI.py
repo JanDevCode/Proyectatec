@@ -10,12 +10,14 @@ import browser
 import database
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
+import requests
+from sqlalchemy import create_engine
 
 
 #inicio de la ventana
 main_window = Tk()
 #Testo de la parte de arriba de la ventana
-main_window.title("VirtualIA")
+main_window.title("LuIa")
 
 #personalizacion
 main_window.geometry("1500x900")
@@ -26,19 +28,25 @@ comandos = """"
     Comandos que estan disponibles:
     1.- Reproduce...(cancion)
     2.-Busca...(Algo que quieras buscar)
-    3.-Abre...(pagina web o app)
-    4.-Alarma...(En formato de 24H)
-    5.-Archivo...(Nombre del archivo)
-    6.-Colores...(Rojo,Azul,Amarillo)
-    7.- Termina
+    3.-...(pagina web o app)
+    4.-Archivo...(Nombre de archivo)
+    5.- Pronuncia todo lo que se le escriba en una caja de texto
+    6.- Envia mensajes por whatsApp
+    7.- Cuenta con distintos tonos de voz
+    8.- Puede agregar archivos, apps y webs mediante archivos de texto
+    9.- Da a conocer todos los datos que tiene guardados.
+    10.- Permite agregar contactos y mostrarlo
+    11.- Notas(Escribe)
+    12.- Permite registrar nombre al usuario
+    13.- Termina el proceso de captacion de instrucciones
 """
 
-label_title = Label(main_window, text="Virtual IA",bg="#ffb703", fg="#f1faee", font=('Arial',20, 'bold'))
+label_title = Label(main_window, text="LucIa",bg="#ffb703", fg="#f1faee", font=('Arial',20, 'bold'))
 label_title.pack(pady=10)
 
 canvas_comandos = Canvas(bg="#f1faee", height=270, width=350)
 canvas_comandos.place(x=20, y=80)
-canvas_comandos.create_text(175,120, text=comandos, fill="black", font='Arial 11')
+canvas_comandos.create_text(175,120, text=comandos, fill="black", font='Arial 5')
 
 text_info = Text(main_window, bg= "#f1faee", fg="black")
 text_info.place(x=20,  y=400, height= 270, width=350)
@@ -57,7 +65,7 @@ def english_voice():
 def change_voice(id):
     engine.setProperty("voice",voices[id].id)#Tomamos la voz de la libreria
     engine.setProperty('rate', 145)#velocidad de la voz
-    talk("Asi se escucha la voz del asistente virtual dependiendo el idioma seleccionado creado por tony, guetze, angel y Jan")
+    talk("Asi se escucha la voz del asistente virtual dependiendo el idioma seleccionado creado por tony, guetze, angel y Jan ademas de que contamos con la colaboracion de cristiano ronaldo")
 
 name = "Virtual"
 listener = sr.Recognizer()#Empieza a reconocer
@@ -78,13 +86,13 @@ def charge_data(name_dict, name_file):
         pass
 
 
-sites= dict()
+sites = dict()
 charge_data(sites, "pages.txt")
 
-files= dict()
+files = dict()
 charge_data(files, "archivos.txt")
 
-programs= dict()
+programs = dict()
 charge_data(programs, "apps.txt")
 
 contacts = dict()
@@ -117,6 +125,23 @@ def listen():
     return rec
     
 #Funciones asociadas a las palabras claves
+def conversar(rec):
+    chat = ChatBot("Virtual", database_uri=None)
+    trainer = ListTrainer(chat)
+    trainer.train(database.get_Preguntas_Respuestas())
+    talk("vamos a conversar...")
+    while True:
+        try:
+            request = listen("")
+        except UnboundLocalError:
+            talk("No entendi, intenta de nuevo")
+            continue 
+        print ("Tú: ", request)
+        answer = chat.get_response(request)
+        print ("Virtual: ", answer)     
+        talk (answer)
+        if 'un gusto' in request:
+            break
 
 def reproduce(rec):
     music = rec.replace('reproduce', '')
@@ -137,21 +162,22 @@ def thread_alarma(rec):
 def colores(rec):
     talk("Enseguida")
     colores.capturando()
+
 def abre(rec):
-    task = rec.replace('abre', '').strip()
+    task = rec.replace('abre', '').strip().lower()
 
     if task in sites:
                 for task in sites:
                     if task in rec:
                         sub.call(f'start chrome.exe {sites[task]}', shell=True)
-                        talk(f'Abriendo{task}')
-                    elif task in programs:
-                         for task in programs:
-                             if task in rec:
-                                 talk (f'Abriendo {task}')
-                                 sub.Popen(programs[task])
-                    else:
-                        talk("Lo siento parece que aun no has agregado esa app o pagina, usa los botones de agregar")
+                        talk(f'Abriendo {task}')
+    elif task in programs:
+        #sub.Popen([f'"{programs[task]}"'], shell=True)
+        sub.Popen([programs[task]], shell=True)
+        talk(f'Abriendo {task}')
+    else:
+        talk("Lo siento, parece que aún no has agregado esa app o página. Usa los botones de agregar.")
+
 def archivo(rec):
     file = rec.replace('archivo', '').strip()
     if file in files:
@@ -217,7 +243,8 @@ key_words = {
         'abre': abre,
         'archivo': archivo,
         'escribe': escribe,
-        'mensaje': enviar_mensaje
+        'mensaje': enviar_mensaje,
+        'conversar': conversar
 }
 
 
@@ -228,7 +255,7 @@ def run_Virtual():
             rec = listen()
         except UnboundLocalError:
             talk("No entendi, intenta de nuevo")
-            continue         
+            continue       
         if 'busca' in rec:
             key_words['busca'](rec)
             break
@@ -339,9 +366,8 @@ def add_files():
     save_data(name_file, path_file, "archivos.txt")
     namefile_entry.delete(0, "end")
     pathf_entry.delete(0, "end")
-
 def add_apps():
-    name_file=nameapps_entry.get().strip()
+    name_file = nameapps_entry.get().strip()
     path_file = patha_entry.get().strip()
 
     programs[name_file] = path_file

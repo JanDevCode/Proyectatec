@@ -1,7 +1,7 @@
-import _sqlite3
+import sqlite3
 
 def create_connection():
-    connection = _sqlite3.connect("brain.db")
+    connection = sqlite3.connect("brain.db")
     return connection
 
 def get_table():

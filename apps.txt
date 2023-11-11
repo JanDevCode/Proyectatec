@@ -1,1 +1,1 @@
-prueba,adswad
+spotify,C:\Users\janco\AppData\Local\Microsoft\WindowsApps\Spotify.exe

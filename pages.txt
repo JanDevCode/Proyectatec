@@ -1,1 +1,1 @@
-Facebook,https://www.facebook.com/
+facebook,facebook.com
